@@ -12,6 +12,7 @@
     "felix-couchdb": "^1.0.8",
     "http-errors": "~1.6.2",
     "morgan": "~1.9.0",
+    "nano": "^6.4.3",
     "twig": "~0.10.3"
   }
 }
