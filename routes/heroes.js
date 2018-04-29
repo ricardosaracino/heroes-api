@@ -7,14 +7,37 @@ var nano = require('nano')('http://localhost:5984'),
 	db = nano.use('heroes');
 
 
-function requireRole(role) {
+function restrict(req, res, next) {
+	if (req.session.user) {
+		next();
+	} else {
+		req.session.error = 'Access denied!';
+		res.redirect('/login');
+	}
+}
+
+
+
+function requireRole(params) {
 
 	return function (req, res, next) {
-		if (req.session && req.session.user && req.session.user.role === role) {
-			next();
-		} else {
-			res.send(403);
+
+		if(req.session) {
+
+			if (req.session.views) {
+				req.session.views++;
+			} else {
+				req.session.views = 1;
+			}
+
+			if (params.role && req.session.user && req.session.user.role === params.role) {
+				//next();
+			} else {
+				//res.send(403);
+			}
 		}
+
+		next();
 	}
 }
 
@@ -43,7 +66,7 @@ http://...com/posts/1 - POST request  -> Goes to posts.delete(1) method in the s
 
 // https://expressjs.com/en/4x/api.html
 
-router.get('/', function (request, res, next) {
+router.get('/', requireRole({role: 'user'}), function (request, res, next) {
 
 	var q = {
 		selector: {
@@ -65,10 +88,11 @@ router.get('/', function (request, res, next) {
 	});
 });
 
-router.get('/:id', function (request, res) {
+router.get('/:id', requireRole({role: 'user'}),function (request, res) {
 	db.get(request.params.id, function (error, body) {
 		if (error) {
 			res.status(404);
+			// TODO this has way to much information
 			res.write(JSON.stringify(error));
 		}
 		else {
@@ -78,7 +102,7 @@ router.get('/:id', function (request, res) {
 	});
 });
 
-router.post('/', function (request, res) {
+router.post('/', requireRole({role: 'user'}),function (request, res) {
 
 	request.body.type = 'hero';
 	request.body.created = new Date().getTime();
@@ -105,7 +129,7 @@ router.post('/', function (request, res) {
 	});
 });
 
-router.put('/', function (request, res) {
+router.put('/', requireRole({role: 'user'}),function (request, res) {
 
 	request.body.type = 'hero';
 	request.body.updated = new Date().getTime();
@@ -132,7 +156,7 @@ router.put('/', function (request, res) {
 	});
 });
 
-router.delete('/', function (request, res) {
+router.delete('/', requireRole({role: 'user'}), function (request, res) {
 	db.destroy(request.body._id, request.body._rev, function (error, body) {
 		if (error) {
 			res.status(404);

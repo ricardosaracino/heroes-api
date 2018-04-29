@@ -4,7 +4,11 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+var session = require('express-session');
+var FileStore = require('session-file-store')(session);
 
+
+var authRouter = require('./routes/auth');
 var heroesRouter = require('./routes/heroes');
 
 var app = express();
@@ -15,7 +19,31 @@ app.use(express.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+
+
+
+var sess = {
+	store: new FileStore(),
+	secret: 'super-secret',
+	resave: true,
+	saveUninitialized: true,
+	cookie: {}
+};
+
+if (app.get('env') === 'production') {
+	app.set('trust proxy', 1); // trust first proxy
+	sess.cookie.secure = true; // serve secure cookies
+}
+
+app.use(session(sess));
+
+
+
+
+app.use('/auth', authRouter);
 app.use('/heroes', heroesRouter);
+
+
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -34,13 +62,17 @@ app.use(function (err, req, res, next) {
 	res.status(err.status || 500);
 
 	console.log(err);
+
 	res.write(JSON.stringify({'error': err.message}));
 
 	res.end();
 });
 
-app.listen(app.get('port'));
+var server = app.listen(app.get('port'), function () {
+	var host = server.address().address;
+	var port = server.address().port;
 
-console.log('API listening on ', app.get('port'));
+	console.log('API app listening at http://%s:%s', host, port);
+});
 
 module.exports = app;
