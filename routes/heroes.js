@@ -7,22 +7,11 @@ var nano = require('nano')('http://localhost:5984'),
 	db = nano.use('heroes');
 
 
-function restrict(req, res, next) {
-	if (req.session.user) {
-		next();
-	} else {
-		req.session.error = 'Access denied!';
-		res.redirect('/login');
-	}
-}
-
-
-
 function requireRole(params) {
 
 	return function (req, res, next) {
 
-		if(req.session) {
+		if (req.session) {
 
 			if (req.session.views) {
 				req.session.views++;
@@ -30,14 +19,21 @@ function requireRole(params) {
 				req.session.views = 1;
 			}
 
-			if (params.role && req.session.user && req.session.user.role === params.role) {
-				//next();
+			if (params.role && req.session.user && req.session.user.roles.indexOf(params.role) != -1) {
+				next();
 			} else {
-				//res.send(403);
+
+				if (!req.session.user) {
+					res.send(401); // unauthorized
+				}
+				else {
+					res.send(403); // forbidden
+				}
 			}
 		}
-
-		next();
+		else if (params.role) {
+			res.send(401); // unauthorized ?
+		}
 	}
 }
 
@@ -88,7 +84,7 @@ router.get('/', requireRole({role: 'user'}), function (request, res, next) {
 	});
 });
 
-router.get('/:id', requireRole({role: 'user'}),function (request, res) {
+router.get('/:id', requireRole({role: 'user'}), function (request, res) {
 	db.get(request.params.id, function (error, body) {
 		if (error) {
 			res.status(404);
@@ -96,13 +92,15 @@ router.get('/:id', requireRole({role: 'user'}),function (request, res) {
 			res.write(JSON.stringify(error));
 		}
 		else {
+			//res.headers.append('Views', '1');
+
 			res.write(JSON.stringify(body));
 		}
 		res.end();
 	});
 });
 
-router.post('/', requireRole({role: 'user'}),function (request, res) {
+router.post('/', requireRole({role: 'user'}), function (request, res) {
 
 	request.body.type = 'hero';
 	request.body.created = new Date().getTime();
@@ -121,6 +119,8 @@ router.post('/', requireRole({role: 'user'}),function (request, res) {
 					res.write(JSON.stringify(error));
 				}
 				else {
+
+
 					res.write(JSON.stringify(body));
 				}
 				res.end();
@@ -129,7 +129,7 @@ router.post('/', requireRole({role: 'user'}),function (request, res) {
 	});
 });
 
-router.put('/', requireRole({role: 'user'}),function (request, res) {
+router.put('/', requireRole({role: 'user'}), function (request, res) {
 
 	request.body.type = 'hero';
 	request.body.updated = new Date().getTime();

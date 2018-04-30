@@ -20,8 +20,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-
-
 var sess = {
 	store: new FileStore(),
 	secret: 'super-secret',
@@ -37,12 +35,19 @@ if (app.get('env') === 'production') {
 
 app.use(session(sess));
 
+//https://stackoverflow.com/questions/7067966/how-to-allow-cors#21622564
+//http://50linesofco.de/post/2017-03-06-cors-a-guided-tour
+app.use(function (req, res, next) {
+	res.header('Access-Control-Allow-Origin', 'http://localhost:4200');
+	res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+	res.header('Access-Control-Allow-Credentials', 'true');
+	res.header('Access-Control-Allow-Headers', 'Content-Type, *');
 
-
+	next();
+});
 
 app.use('/auth', authRouter);
 app.use('/heroes', heroesRouter);
-
 
 
 // catch 404 and forward to error handler
