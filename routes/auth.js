@@ -4,38 +4,60 @@ var router = express.Router();
 
 // https://github.com/apache/nano#dbdestroydocname-rev-callback
 var nano = require('nano')('http://localhost:5984'),
-	db = nano.use('users');
+    db = nano.use('auth-user');
 
 
-router.get('/login', function (request, res, next) {
+router.post('/login', function (request, res, next) {
 
-	request.param('username');
+    var q = {
+        selector: {
+            username: {
+                "$eq": request.body.username
+            }
+        }
+    };
 
-	var q = {
-		selector: {
-			username: {
-				"$eq": request.param('username')
-			}
-			use_index:
-		}
-	};
+    db.find(q, function (error, body) {
+        if (error) {
+            res.status(404);
+            res.write(JSON.stringify(error));
+        }
+        else {
 
-	db.find(q, function (error, body) {
-		if (error) {
-			res.status(404);
-			res.write(JSON.stringify(error));
-		}
-		else {
+            if (body.docs && body.docs.length == 1 && body.docs[0]) {
+                var user = body.docs[0];
 
-			if(body.docs && body.docs.length == 1 && body.docs[0].password)
-			{
-				body.docs[0].password
-			}
+                if (request.body.password && user.password == request.body.password) {
 
-			res.write(JSON.stringify());
-		}
-		res.end();
-	});
+                    user.session_id = request.sessionID;
+
+
+
+                    var hour = 3600000;
+
+                    request.session.cookie.expires = new Date(Date.now() + hour);
+
+                    request.session.cookie.maxAge = hour;
+
+                    request.session.user = user;
+
+
+
+                    res.write(JSON.stringify(user));
+                }
+                else {
+                    res.status(404);
+                    res.write(JSON.stringify({message:'invliad auth'}));
+                }
+            }
+            else {
+                res.status(404);
+                res.write(JSON.stringify({message:'invliad auth'}));
+            }
+        }
+
+        res.end();
+    });
 });
 
 module.exports = router;

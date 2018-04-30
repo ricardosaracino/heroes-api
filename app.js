@@ -27,7 +27,7 @@ var sess = {
 	secret: 'super-secret',
 	resave: true,
 	saveUninitialized: true,
-	cookie: {}
+	cookie: {httpOnly:false}
 };
 
 if (app.get('env') === 'production') {
@@ -39,16 +39,29 @@ app.use(session(sess));
 
 
 
+app.use(function (req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+    );
+
+    next();
+});
+
+
+
 
 app.use('/auth', authRouter);
 app.use('/heroes', heroesRouter);
 
 
-
-// catch 404 and forward to error handler
+/*
+///* catch 404 and forward to error handler
 app.use(function (req, res, next) {
 	next(createError(404));
-});
+});**/
+
 
 app.set('port', process.env.PORT || 8080);
 

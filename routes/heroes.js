@@ -82,6 +82,8 @@ router.get('/', requireRole({role: 'user'}), function (request, res, next) {
 			res.write(JSON.stringify(error));
 		}
 		else {
+
+
 			res.write(JSON.stringify(body.docs));
 		}
 		res.end();
