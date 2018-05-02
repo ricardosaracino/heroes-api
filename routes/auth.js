@@ -4,10 +4,10 @@ var router = express.Router();
 
 // https://github.com/apache/nano#dbdestroydocname-rev-callback
 var nano = require('nano')('http://localhost:5984'),
-	db = nano.use('auth-user');
+	db = nano.use('users');
 
 
-router.post('/login', function (request, res, next) {
+router.post('/', function (request, res, next) {
 
 	// todo harden
 	const username = request.body.username;
@@ -23,7 +23,7 @@ router.post('/login', function (request, res, next) {
 
 	db.find(q, function (error, body) {
 		if (error) {
-			res.status(404);
+			res.status(400);
 			res.write(JSON.stringify(error));
 		}
 		else {
@@ -42,5 +42,17 @@ router.post('/login', function (request, res, next) {
 		res.end();
 	});
 });
+
+
+
+
+router.delete('/', function (request, res, next) {
+
+	res.write(JSON.stringify({ok: true}));
+
+	res.end();
+});
+
+
 
 module.exports = router;

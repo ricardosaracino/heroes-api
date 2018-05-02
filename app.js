@@ -46,7 +46,7 @@ app.use(function (req, res, next) {
     next();
 });
 
-app.use('/auth', authRouter);
+app.use('/authenticate', authRouter);
 app.use('/heroes', heroesRouter);
 
 

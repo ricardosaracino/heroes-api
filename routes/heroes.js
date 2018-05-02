@@ -38,6 +38,20 @@ function requireRole(params) {
 }
 
 
+function herofy(heroDoc) {
+	return {
+		id: heroDoc._id,
+		name: heroDoc.name,
+		age: heroDoc.age,
+		created: heroDoc.created_ts,
+		author: heroDoc.created_by,
+
+		_id: heroDoc._id,
+		_rev: heroDoc._rev
+	};
+};
+
+
 /*
 http://...com/posts/create- POST request  -> Goes to posts.create() method in the server
 http://...com/posts/1/show- GET request  -> Goes to posts.show(1) method in the server
@@ -67,36 +81,37 @@ router.get('/', requireRole({role: 'user'}), function (request, res, next) {
 	var q = {
 		selector: {
 			type: {
-				"$eq": "hero"
+				'$eq': 'hero'
 			}
 		}
 	};
 
-	db.find(q, function (error, body) {
+	db.find(q, function (error, heroDoc) {
 		if (error) {
-			res.status(404);
+			res.status(400);
 			res.write(JSON.stringify(error));
 		}
 		else {
 
 
-			res.write(JSON.stringify(body.docs));
+			// map recurslively
+
+			res.write(JSON.stringify(heroDoc.docs));
 		}
 		res.end();
 	});
 });
 
 router.get('/:id', requireRole({role: 'user'}), function (request, res) {
-	db.get(request.params.id, function (error, body) {
+
+	db.get(request.params.id, function (error, heroDoc) {
 		if (error) {
-			res.status(404);
+			res.status(400);
 			// TODO this has way to much information
 			res.write(JSON.stringify(error));
 		}
 		else {
-			//res.headers.append('Views', '1');
-
-			res.write(JSON.stringify(body));
+			res.write(JSON.stringify(herofy(heroDoc)));
 		}
 		res.end();
 	});
@@ -105,25 +120,25 @@ router.get('/:id', requireRole({role: 'user'}), function (request, res) {
 router.post('/', requireRole({role: 'user'}), function (request, res) {
 
 	request.body.type = 'hero';
-	request.body.created = new Date().getTime();
+	request.body.created_ts = new Date().getTime();
+	request.body.created_by = request.session.user._id
+
 
 	db.insert(request.body, function (error, body) {
 		if (error) {
-			res.status(404);
+			res.status(400);
 			res.write(JSON.stringify(error));
 			res.end();
 		}
 		else {
 			// body contains id, rev, ok
-			db.get(body.id, function (error, body) {
+			db.get(body.id, function (error, heroDoc) {
 				if (error) {
-					res.status(404);
+					res.status(400);
 					res.write(JSON.stringify(error));
 				}
 				else {
-
-
-					res.write(JSON.stringify(body));
+					res.write(JSON.stringify(herofy(heroDoc)));
 				}
 				res.end();
 			});
@@ -134,23 +149,24 @@ router.post('/', requireRole({role: 'user'}), function (request, res) {
 router.put('/', requireRole({role: 'user'}), function (request, res) {
 
 	request.body.type = 'hero';
-	request.body.updated = new Date().getTime();
+	request.body.updated_ts = new Date().getTime();
+	request.body.updated_by = request.session.user._id;
 
-	db.insert(request.body, function (error, body) {
+	db.insert(request.body, function (error, doc) {
 		if (error) {
-			res.status(404);
-			res.write(JSON.stringify(error));
+			res.status(400);
+			res.write(JSON.stringify(error)); // todo this is not sent
 			res.end();
 		}
 		else {
 			// body contains id, rev, ok
-			db.get(body.id, function (error, body) {
+			db.get(doc.id, function (error, heroDoc) {
 				if (error) {
-					res.status(404);
+					res.status(400);
 					res.write(JSON.stringify(error));
 				}
 				else {
-					res.write(JSON.stringify(body));
+					res.write(JSON.stringify(herofy(heroDoc)));
 				}
 				res.end();
 			})
@@ -158,10 +174,10 @@ router.put('/', requireRole({role: 'user'}), function (request, res) {
 	});
 });
 
-router.delete('/', requireRole({role: 'user'}), function (request, res) {
+router.delete('/', requireRole({role: 'user'}), function (req, res) {
 	db.destroy(request.body._id, request.body._rev, function (error, body) {
 		if (error) {
-			res.status(404);
+			res.status(400);
 			res.write(JSON.stringify(error));
 		}
 		else {
