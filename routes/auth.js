@@ -48,6 +48,8 @@ router.post('/', function (request, res, next) {
 
 router.delete('/', function (request, res, next) {
 
+	request.session.user = undefined;
+
 	res.write(JSON.stringify({ok: true}));
 
 	res.end();

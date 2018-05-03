@@ -97,7 +97,7 @@ router.get('/', requireRole({role: 'user'}), function (request, res, next) {
 
 			// map recurslively
 
-			res.write(JSON.stringify(heroDoc.docs));
+			res.write(JSON.stringify(heroDoc.docs.map(herofy)));
 		}
 		res.end();
 	});
