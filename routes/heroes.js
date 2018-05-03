@@ -44,6 +44,7 @@ function herofy(heroDoc) {
 		name: heroDoc.name,
 		age: heroDoc.age,
 		created: heroDoc.created_ts,
+		updated: heroDoc.updated_ts,
 		author: heroDoc.created_by,
 
 		_id: heroDoc._id,
