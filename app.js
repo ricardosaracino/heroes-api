@@ -38,7 +38,7 @@ app.use(session(sess));
 //https://stackoverflow.com/questions/7067966/how-to-allow-cors#21622564
 //http://50linesofco.de/post/2017-03-06-cors-a-guided-tour
 app.use(function (req, res, next) {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:4200');
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Headers', 'Content-Type, *');
@@ -55,7 +55,7 @@ app.use(function (req, res, next) {
     next(createError(404));
 });
 
-app.set('port', process.env.PORT || 8080);
+app.set('port', process.env.PORT || 8030);
 
 // error handler
 app.use(function (err, req, res, next) {

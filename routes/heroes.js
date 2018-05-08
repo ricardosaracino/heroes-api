@@ -9,7 +9,10 @@ var nano = require('nano')('http://localhost:5984'),
 
 function requireRole(params) {
 
+
 	return function (req, res, next) {
+        next();
+return;
 
 		if (req.session) {
 
@@ -122,7 +125,9 @@ router.post('/', requireRole({role: 'user'}), function (request, res) {
 
 	request.body.type = 'hero';
 	request.body.created_ts = new Date().getTime();
-	request.body.created_by = request.session.user._id
+
+
+	//request.body.created_by = request.session.user._id
 
 
 	db.insert(request.body, function (error, body) {
@@ -151,7 +156,9 @@ router.put('/', requireRole({role: 'user'}), function (request, res) {
 
 	request.body.type = 'hero';
 	request.body.updated_ts = new Date().getTime();
-	request.body.updated_by = request.session.user._id;
+	// request.body.updated_by = request.session.user._id;
+
+	request.body._id = request.body.id;
 
 	db.insert(request.body, function (error, doc) {
 		if (error) {
@@ -175,7 +182,7 @@ router.put('/', requireRole({role: 'user'}), function (request, res) {
 	});
 });
 
-router.delete('/', requireRole({role: 'user'}), function (req, res) {
+router.delete('/', requireRole({role: 'user'}), function (request, res) {
 	db.destroy(request.body._id, request.body._rev, function (error, body) {
 		if (error) {
 			res.status(400);
